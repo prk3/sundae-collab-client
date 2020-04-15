@@ -1,2 +1,2 @@
 package-lock.json -diff
-dist/ -diff
+dist/**/* -diff
