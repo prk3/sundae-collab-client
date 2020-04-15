@@ -119,6 +119,7 @@ export default class Session {
   constructor(
     private readonly client: Client,
     data: ServerResponse<'JOIN_SESSION'>,
+    private throttleTime = 300,
   ) {
     this.emitter = new EventTarget();
     this.id = data.id;
@@ -182,7 +183,7 @@ export default class Session {
       this.changeTimeout = window.setTimeout(() => {
         this.changeTimeout = 'finished';
         this.tryProcessNextBatch();
-      }, 450);
+      }, this.throttleTime);
     }
 
     // apply change to the resource
@@ -323,6 +324,7 @@ export function initSession(
   resourceType: string,
   resourceId: string,
   resourceValue: jot.Document,
+  throttleTime = 300,
 ) {
   let makeJoinPromise: () => Promise<Session>;
 
@@ -363,7 +365,7 @@ export function initSession(
       },
     };
     return client.sendRequest(joinMessage)
-      .then((res) => new Session(client, res))
+      .then((res) => new Session(client, res, throttleTime))
       .catch((err) => {
         if ((err.name as string).match(/NotFound/i)) {
           return makeStartPromise();

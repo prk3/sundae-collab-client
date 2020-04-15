@@ -25,6 +25,7 @@ interface SessionEmitter {
  */
 export default class Session {
     private readonly client;
+    private throttleTime;
     /**
      * Emits session events.
      */
@@ -79,7 +80,7 @@ export default class Session {
      * Constructs a Session instance out of client and join response data.
      * Warning: You probably want to use initSession function instead.
      */
-    constructor(client: Client, data: ServerResponse<'JOIN_SESSION'>);
+    constructor(client: Client, data: ServerResponse<'JOIN_SESSION'>, throttleTime?: number);
     /**
      * Update resource with a jot operation. Session will take care of syncing
      * the update with the collaboration server.
@@ -111,5 +112,5 @@ export default class Session {
  * Starts a session if it does not exist. Joins the session if already
  * started.
  */
-export declare function initSession(client: Client, resourceType: string, resourceId: string, resourceValue: jot.Document): Promise<Session>;
+export declare function initSession(client: Client, resourceType: string, resourceId: string, resourceValue: jot.Document, throttleTime?: number): Promise<Session>;
 export {};

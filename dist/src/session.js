@@ -47,9 +47,11 @@ var Session = /** @class */ (function () {
      * Constructs a Session instance out of client and join response data.
      * Warning: You probably want to use initSession function instead.
      */
-    function Session(client, data) {
+    function Session(client, data, throttleTime) {
         var _this = this;
+        if (throttleTime === void 0) { throttleTime = 300; }
         this.client = client;
+        this.throttleTime = throttleTime;
         this.emitter = new EventTarget();
         this.id = data.id;
         this.participants = data.participants;
@@ -96,7 +98,7 @@ var Session = /** @class */ (function () {
             this.changeTimeout = window.setTimeout(function () {
                 _this.changeTimeout = 'finished';
                 _this.tryProcessNextBatch();
-            }, 450);
+            }, this.throttleTime);
         }
         // apply change to the resource
         var newState = applyOpOnState(operation, { value: this.value, meta: this.meta });
@@ -215,7 +217,8 @@ exports.default = Session;
  * Starts a session if it does not exist. Joins the session if already
  * started.
  */
-function initSession(client, resourceType, resourceId, resourceValue) {
+function initSession(client, resourceType, resourceId, resourceValue, throttleTime) {
+    if (throttleTime === void 0) { throttleTime = 300; }
     var makeJoinPromise;
     var makeStartPromise = function () {
         log_1.default.debug('> START_SESSION');
@@ -249,7 +252,7 @@ function initSession(client, resourceType, resourceId, resourceValue) {
             },
         };
         return client.sendRequest(joinMessage)
-            .then(function (res) { return new Session(client, res); })
+            .then(function (res) { return new Session(client, res, throttleTime); })
             .catch(function (err) {
             if (err.name.match(/NotFound/i)) {
                 return makeStartPromise();
