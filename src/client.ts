@@ -4,7 +4,7 @@ import {
   ResponsePacket, ServerMessageType, ServerResponse, Message, ClientMessageType, ClientMessageData,
   ClientMessages,
   errorDataValidator,
-} from 'shared';
+} from 'sundae-collab-shared';
 import sendRequest from './utils/sendRequest';
 import { ApplicationError } from './utils/errors';
 import log from './utils/log';

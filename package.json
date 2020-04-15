@@ -23,7 +23,7 @@
     "jot": "https://github.com/prk3/jot.git",
     "loglevel": "^1.6.8",
     "nanoid": "^3.1.3",
-    "shared": "https://github.com/prk3/sundae-collab-shared.git",
+    "sundae-collab-shared": "https://github.com/prk3/sundae-collab-shared.git",
     "typescript": "^3.8.3"
   },
   "devDependencies": {

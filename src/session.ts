@@ -1,5 +1,5 @@
 import jot from 'jot';
-import { ServerMessage, ClientMessageData, ServerResponse } from 'shared';
+import { ServerMessage, ClientMessageData, ServerResponse } from 'sundae-collab-shared';
 import Client, { Detach } from './client';
 import log from './utils/log';
 import { assertNotNull } from './utils/asserts';
