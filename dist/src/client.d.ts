@@ -1,4 +1,4 @@
-import { ServerMessage, ServerMessageType, ServerResponse, ClientMessageType, ClientMessageData, ClientMessages } from 'shared';
+import { ServerMessage, ServerMessageType, ServerResponse, ClientMessageType, ClientMessageData, ClientMessages } from 'sundae-collab-shared';
 export declare type Detach = () => void;
 declare type Callback = () => void;
 /**

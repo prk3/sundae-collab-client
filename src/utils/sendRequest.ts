@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import {
   ResponsePacket, responsePacketValidator, errorDataValidator, ServerMessageType, ServerMessage,
   ServerResponse,
-} from 'shared';
+} from 'sundae-collab-shared';
 import { ApplicationError } from './errors';
 
 export type SendOptions = {

@@ -1,4 +1,4 @@
-import { ServerMessageType, ServerMessage, ServerResponse } from 'shared';
+import { ServerMessageType, ServerMessage, ServerResponse } from 'sundae-collab-shared';
 export declare type SendOptions = {
     timeout?: number;
     signal?: AbortSignal;

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var nanoid_1 = require("nanoid");
-var shared_1 = require("shared");
+var sundae_collab_shared_1 = require("sundae-collab-shared");
 var errors_1 = require("./errors");
 /**
  * Sends a server request to the socket and returns a promise resolving with
@@ -30,7 +30,7 @@ function sendRequest(socket, message, _a) {
             var data = _a.data;
             var packet;
             try {
-                packet = shared_1.responsePacketValidator.validateSync(JSON.parse(data), { strict: true });
+                packet = sundae_collab_shared_1.responsePacketValidator.validateSync(JSON.parse(data), { strict: true });
             }
             catch (e) {
                 // ignore if data is non-string, non-json or invalid response packet
@@ -46,7 +46,7 @@ function sendRequest(socket, message, _a) {
             signal === null || signal === void 0 ? void 0 : signal.removeEventListener('abort', abortListener);
             try {
                 // reject if response data matches error response format
-                var errData = shared_1.errorDataValidator.validateSync(packet.data, { strict: true });
+                var errData = sundae_collab_shared_1.errorDataValidator.validateSync(packet.data, { strict: true });
                 rej(new errors_1.ApplicationError(errData.error));
             }
             catch (e) {

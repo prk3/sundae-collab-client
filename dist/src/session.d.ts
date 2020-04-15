@@ -1,5 +1,5 @@
 import jot from 'jot';
-import { ServerResponse } from 'shared';
+import { ServerResponse } from 'sundae-collab-shared';
 import Client from './client';
 export declare type SessionParticipant = {
     id: string;

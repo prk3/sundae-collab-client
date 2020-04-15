@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var nanoid_1 = require("nanoid");
-var shared_1 = require("shared");
+var sundae_collab_shared_1 = require("sundae-collab-shared");
 var sendRequest_1 = __importDefault(require("./utils/sendRequest"));
 var errors_1 = require("./utils/errors");
 var log_1 = __importDefault(require("./utils/log"));
@@ -80,7 +80,7 @@ var Client = /** @class */ (function () {
                 return;
             }
             try {
-                var response = shared_1.responsePacketValidator.validateSync(json);
+                var response = sundae_collab_shared_1.responsePacketValidator.validateSync(json);
                 _this.handleResponse(response);
                 return;
             }
@@ -89,7 +89,7 @@ var Client = /** @class */ (function () {
             }
             var requestPacket;
             try {
-                requestPacket = shared_1.requestPacketValidator.validateSync(json);
+                requestPacket = sundae_collab_shared_1.requestPacketValidator.validateSync(json);
             }
             catch (e) {
                 log_1.default.warn('Malformed packet.', { json: json, e: e });
@@ -97,7 +97,7 @@ var Client = /** @class */ (function () {
             }
             var message;
             try {
-                message = shared_1.messageValidator.validateSync(requestPacket.message);
+                message = sundae_collab_shared_1.messageValidator.validateSync(requestPacket.message);
                 // TODO validate server messages
             }
             catch (e) {
@@ -178,7 +178,7 @@ var Client = /** @class */ (function () {
             this.responseHandlers.delete(response.responseTo);
             var res = handler.res, rej = handler.rej;
             try {
-                var errData = shared_1.errorDataValidator.validateSync(response.data, { strict: true });
+                var errData = sundae_collab_shared_1.errorDataValidator.validateSync(response.data, { strict: true });
                 rej(new errors_1.ApplicationError(errData.error));
             }
             catch (e) {
