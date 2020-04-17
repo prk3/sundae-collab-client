@@ -76,9 +76,9 @@ export default class Client {
   private requestSubscriptions: { type: string, filter: any, handler: (data: any) => any }[];
 
   /**
-   * Creates Client instance given url of the collaboration service (probably
-   * starting with ws:// or wss://) and client identity which will be used
-   * for authentication.
+   * Creates Client instance given url of the collaboration service (starting
+   * with ws:// or wss:// and without the trailing slash) and client identity
+   * which will be used for authentication.
    */
   constructor(url: string, identity: any) {
     this.identity = identity;
@@ -92,7 +92,7 @@ export default class Client {
     this.requestQueue = [];
 
     // initialize the socket
-    this.socket = new WebSocket(url);
+    this.socket = new WebSocket(url + '/');
     this.socket.onopen = this.handleOpen;
     this.socket.onclose = this.handleClose;
   }

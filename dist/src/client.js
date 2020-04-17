@@ -25,9 +25,9 @@ function matches(data, filter) {
  */
 var Client = /** @class */ (function () {
     /**
-     * Creates Client instance given url of the collaboration service (probably
-     * starting with ws:// or wss://) and client identity which will be used
-     * for authentication.
+     * Creates Client instance given url of the collaboration service (starting
+     * with ws:// or wss:// and without the trailing slash) and client identity
+     * which will be used for authentication.
      */
     function Client(url, identity) {
         var _this = this;
@@ -114,7 +114,7 @@ var Client = /** @class */ (function () {
         this.requestSubscriptions = [];
         this.requestQueue = [];
         // initialize the socket
-        this.socket = new WebSocket(url);
+        this.socket = new WebSocket(url + '/');
         this.socket.onopen = this.handleOpen;
         this.socket.onclose = this.handleClose;
     }
