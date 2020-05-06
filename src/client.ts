@@ -52,7 +52,7 @@ export default class Client {
   /**
    * Web socket client.
    */
-  private socket: WebSocket | null;
+  private socket: WebSocket;
 
   /**
    * Indicates if the client is ready and can handle protocol messages.
@@ -76,11 +76,11 @@ export default class Client {
   private requestSubscriptions: { type: string, filter: any, handler: (data: any) => any }[];
 
   /**
-   * Creates Client instance given url of the collaboration service (starting
-   * with ws:// or wss:// and without the trailing slash) and client identity
-   * which will be used for authentication.
+   * Creates Client instance given WebSocket client connected to the
+   * collaboration service and user identity, which will be used for
+   * authentication.
    */
-  constructor(url: string, identity: any) {
+  constructor(socket: WebSocket, identity: any) {
     this.identity = identity;
 
     this.emitter = new EventTarget();
@@ -92,7 +92,7 @@ export default class Client {
     this.requestQueue = [];
 
     // initialize the socket
-    this.socket = new WebSocket(url + '/');
+    this.socket = socket;
     this.socket.onopen = this.handleOpen;
     this.socket.onclose = this.handleClose;
   }
@@ -144,22 +144,19 @@ export default class Client {
    * internal client data.
    */
   private handleOpen = () => {
-    const socket = this.socket as WebSocket;
     const message: ServerMessage<'AUTHENTICATE'> = {
       type: 'AUTHENTICATE',
       data: { clientIdentity: this.identity },
     };
 
     log.debug('> AUTHENTICATE');
-    return sendRequest(socket, message, {})
+    return sendRequest(this.socket, message, {})
       .then(({ id }) => {
-        if (socket === this.socket) {
-          this.id = id;
-          this.isReady = true;
-          this.socket.onmessage = this.handleMessage;
-          (this.emitter as EventTarget).dispatchEvent(new CustomEvent('id'));
-          this.sendQueuedRequests();
-        }
+        this.id = id;
+        this.isReady = true;
+        this.socket.onmessage = this.handleMessage;
+        (this.emitter as EventTarget).dispatchEvent(new CustomEvent('id'));
+        this.sendQueuedRequests();
       })
       .catch((err) => {
         log.error('Could not start collaboration client.', err);
@@ -191,7 +188,7 @@ export default class Client {
     }
 
     try {
-      const response: ResponsePacket = responsePacketValidator.validateSync(json);
+      const response: ResponsePacket = responsePacketValidator.validateSync(json, { strict: true });
       this.handleResponse(response);
       return;
     } catch (e) {
@@ -200,7 +197,7 @@ export default class Client {
 
     let requestPacket: RequestPacket;
     try {
-      requestPacket = requestPacketValidator.validateSync(json);
+      requestPacket = requestPacketValidator.validateSync(json, { strict: true });
     } catch (e) {
       log.warn('Malformed packet.', { json, e });
       return;
@@ -222,7 +219,7 @@ export default class Client {
    * Flushes the request queue.
    */
   private sendQueuedRequests() {
-    while (this.isReady && this.socket && this.requestQueue.length > 0) {
+    while (this.isReady && this.requestQueue.length > 0) {
       const { requestQueue } = this; // used only for type reading
       const { message, res, rej } = this.requestQueue.shift() as typeof requestQueue[0];
       const uid = nanoid();

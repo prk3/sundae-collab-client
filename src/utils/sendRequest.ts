@@ -24,14 +24,14 @@ export default function sendRequest<T extends ServerMessageType>(
 ): Promise<ServerResponse<T>> {
   const uid = nanoid();
 
-  let timeoutId: number;
+  let timeoutId: any;
   let messageListener: (ev: MessageEvent) => void;
   let closeListener: () => void;
   let abortListener: () => void;
 
   // time limit, configurable through options
   const timeoutPromise = new Promise<ServerResponse<T>>((res, rej) => {
-    timeoutId = window.setTimeout(() => {
+    timeoutId = setTimeout(() => {
       // don't need to clear timeout
       socket.removeEventListener('message', messageListener);
       socket.removeEventListener('close', closeListener);
@@ -71,7 +71,7 @@ export default function sendRequest<T extends ServerMessageType>(
     };
     // reject if socket closes before timeout
     closeListener = () => {
-      window.clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
       // don't need to clear message listener, socket will remove the handler
       signal?.removeEventListener('abort', abortListener);
       rej(new Error('Socket closed'));
@@ -84,7 +84,7 @@ export default function sendRequest<T extends ServerMessageType>(
   const abortPromise = new Promise<ServerResponse<T>>((res, rej) => {
     if (signal) {
       abortListener = () => {
-        window.clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
         socket.removeEventListener('message', messageListener);
         socket.removeEventListener('close', closeListener);
         signal.removeEventListener('abort', abortListener);

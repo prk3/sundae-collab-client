@@ -5,7 +5,6 @@ import log from './utils/log';
 import { assertNotNull } from './utils/asserts';
 
 export type SessionParticipant = { id: string, identity: any, color: number };
-type State = { value: jot.Document, meta: jot.Meta };
 type Callback = () => void;
 
 /**
@@ -18,15 +17,6 @@ interface SessionEmitter {
   removeEventListener(type: 'participants', callback: Callback): void;
   removeEventListener(type: 'value', callback: Callback): void;
   removeEventListener(type: 'meta', callback: Callback): void;
-}
-
-/**
- * Applies jot operation and state and returns a new, updated state.
- */
-function applyOpOnState(op: jot.Operation, state: State): State {
-  const meta = { in: state.meta, out: undefined as undefined | jot.Meta };
-  const newValue = op.apply(state.value, meta);
-  return { value: newValue, meta: meta.out ?? state.meta };
 }
 
 /**
@@ -89,7 +79,7 @@ export default class Session {
 
   /**
    * Timer started on any local change to the resource.
-   * number = id of a timeout
+   * number = id of a timeout (or Timeout object in node!)
    * unset = timer has not been set
    * finished = timer has finished, but was not "unset" by update response
    */
@@ -179,23 +169,25 @@ export default class Session {
    */
   update(operation: jot.Operation) {
     // start change timeout if unset
+    // timeout is casted to any because setTimeout returns number/Timeout
+    // depending on the environment
     if (this.changeTimeout === 'unset') {
-      this.changeTimeout = window.setTimeout(() => {
+      this.changeTimeout = setTimeout(() => {
         this.changeTimeout = 'finished';
         this.tryProcessNextBatch();
-      }, this.throttleTime);
+      }, this.throttleTime) as any;
     }
 
     // apply change to the resource
-    const newState = applyOpOnState(operation, { value: this.value, meta: this.meta });
+    const [newValue, newMeta] = operation.applyWithMeta(this.value, this.meta);
 
-    if (newState.value !== this.value) {
-      this.value = newState.value;
+    if (newValue !== this.value) {
+      this.value = newValue;
       (this.emitter as EventTarget).dispatchEvent(new CustomEvent('value'));
     }
 
-    if (newState.meta !== this.meta) {
-      this.meta = newState.meta;
+    if (newMeta !== this.meta) {
+      this.meta = newMeta;
       (this.emitter as EventTarget).dispatchEvent(new CustomEvent('meta'));
     }
 
@@ -263,12 +255,13 @@ export default class Session {
       .then(({ version }) => {
         assertNotNull(this.sentChange);
 
-        const acceptedChange = this.sentChange;
-        const oldSynced: State = { value: this.syncedValue, meta: this.syncedMeta };
-        const newSynced = applyOpOnState(acceptedChange, oldSynced);
+        const [newSyncedValue, newSyncedMeta] = this.sentChange.applyWithMeta(
+          this.syncedValue,
+          this.syncedMeta,
+        );
+        this.syncedValue = newSyncedValue;
+        this.syncedMeta = newSyncedMeta;
         this.syncedVersion = version;
-        this.syncedValue = newSynced.value;
-        this.syncedMeta = newSynced.meta;
         this.sentChange = null;
         this.tryProcessNextBatch();
       });
@@ -280,37 +273,47 @@ export default class Session {
    */
   private handleExternalUpdate(message: ClientMessageData<'UPDATE_RESOURCE'>) {
     const acceptedChange = jot.opFromJSON(message.update.operation);
-    const oldSynced: State = { value: this.syncedValue, meta: this.syncedMeta };
-    const newSynced = applyOpOnState(acceptedChange, oldSynced);
-    this.syncedVersion = message.update.version;
-    this.syncedValue = newSynced.value;
-    this.syncedMeta = newSynced.meta;
+    const [newSyncedValue, newSyncedMeta] = acceptedChange.applyWithMeta(
+      this.syncedValue,
+      this.syncedMeta,
+    );
 
     // rebase pending and sent changes
 
     if (this.pendingChange !== null) {
-      const oldSentState = this.sentChange ? applyOpOnState(this.sentChange, oldSynced) : oldSynced;
-      this.pendingChange = rebase(this.pendingChange, acceptedChange, oldSentState.value);
+      const [sentValue] = this.sentChange
+        ? this.sentChange.applyWithMeta(this.syncedValue, this.syncedMeta)
+        : [this.syncedValue, this.syncedMeta];
+
+      this.pendingChange = rebase(this.pendingChange, acceptedChange, sentValue);
     }
 
     if (this.sentChange !== null) {
-      this.sentChange = rebase(this.sentChange, acceptedChange, oldSynced.value);
+      this.sentChange = rebase(this.sentChange, acceptedChange, this.syncedValue);
     }
 
-    let newState = newSynced;
+    let [newValue, newMeta] = [newSyncedValue, newSyncedMeta];
 
     if (this.sentChange !== null) {
-      newState = applyOpOnState(this.sentChange, newState);
+      [newValue, newMeta] = this.sentChange.applyWithMeta(newValue, newMeta);
     }
     if (this.pendingChange !== null) {
-      newState = applyOpOnState(this.pendingChange, newState);
+      [newValue, newMeta] = this.pendingChange.applyWithMeta(newValue, newMeta);
     }
 
-    this.value = newState.value;
-    this.meta = newState.meta;
+    if (newValue !== this.value) {
+      this.value = newValue;
+      (this.emitter as EventTarget).dispatchEvent(new CustomEvent('value'));
+    }
 
-    (this.emitter as EventTarget).dispatchEvent(new CustomEvent('value'));
-    (this.emitter as EventTarget).dispatchEvent(new CustomEvent('meta'));
+    if (newMeta !== this.meta) {
+      this.meta = newMeta;
+      (this.emitter as EventTarget).dispatchEvent(new CustomEvent('meta'));
+    }
+
+    this.syncedVersion = message.update.version;
+    this.syncedValue = newSyncedValue;
+    this.syncedMeta = newSyncedMeta;
   }
 }
 

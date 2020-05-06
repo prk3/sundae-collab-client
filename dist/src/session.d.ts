@@ -60,7 +60,7 @@ export default class Session {
     private syncedMeta;
     /**
      * Timer started on any local change to the resource.
-     * number = id of a timeout
+     * number = id of a timeout (or Timeout object in node!)
      * unset = timer has not been set
      * finished = timer has finished, but was not "unset" by update response
      */

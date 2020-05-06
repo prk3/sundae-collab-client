@@ -3,7 +3,7 @@ module.exports = {
     'airbnb-typescript',
   ],
   parserOptions: {
-    project: './tsconfig.json',
+    project: ['./tsconfig.json', './test/tsconfig.json'],
   },
 };
 

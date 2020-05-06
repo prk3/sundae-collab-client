@@ -16,7 +16,7 @@ function sendRequest(socket, message, _a) {
     var abortListener;
     // time limit, configurable through options
     var timeoutPromise = new Promise(function (res, rej) {
-        timeoutId = window.setTimeout(function () {
+        timeoutId = setTimeout(function () {
             // don't need to clear timeout
             socket.removeEventListener('message', messageListener);
             socket.removeEventListener('close', closeListener);
@@ -57,7 +57,7 @@ function sendRequest(socket, message, _a) {
         };
         // reject if socket closes before timeout
         closeListener = function () {
-            window.clearTimeout(timeoutId);
+            clearTimeout(timeoutId);
             // don't need to clear message listener, socket will remove the handler
             signal === null || signal === void 0 ? void 0 : signal.removeEventListener('abort', abortListener);
             rej(new Error('Socket closed'));
@@ -69,7 +69,7 @@ function sendRequest(socket, message, _a) {
     var abortPromise = new Promise(function (res, rej) {
         if (signal) {
             abortListener = function () {
-                window.clearTimeout(timeoutId);
+                clearTimeout(timeoutId);
                 socket.removeEventListener('message', messageListener);
                 socket.removeEventListener('close', closeListener);
                 signal.removeEventListener('abort', abortListener);

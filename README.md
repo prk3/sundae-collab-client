@@ -10,7 +10,7 @@ sundae-collab-client is a set of Javascript utilities that talk to [sundae-colla
 Establishes connection to the collaboration server. Forwards incoming messages to subscription handlers. Requests are queued, so you can send requests before the initialization process finishes.
 
 Available methods:
-- `constructor` - Creates client instance given url and client identity.
+- `constructor` - Creates client instance given a WebSocket client and user's identity.
 - `sendRequest` - Sends request to the server. Returns a promise that resolves to a response or rejects with ApplicationError.
 - `subscribe` - Listens for requests coming from server and if the message meets criteria (matches type and filter), subscribe handler is called with message content. The value returned by the handler is sent back to the server. Return value of subscribe is a function canceling the subscriptions.
 - `stop` - Closes the client.
@@ -39,14 +39,18 @@ Builds client code to `dist` directory.
 
 Builds client code to `dist` directory. Runs compiler again if the code changes.
 
-### `npm run list`
+### `npm run lint`
 
 Lints source files.
+
+### `npm run test`
+
+Runs unit tests in node environment with polyfilled browser utilities and mocked WebSocket client.
 
 ## TODO
 
 1. Improve subscription filters.
-2. Separate initialization of Client to a separate functions, like in Session.
+2. Separate initialization of Client to a separate function, like in Session.
 
 ## Learn more
 

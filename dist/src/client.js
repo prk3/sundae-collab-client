@@ -25,33 +25,30 @@ function matches(data, filter) {
  */
 var Client = /** @class */ (function () {
     /**
-     * Creates Client instance given url of the collaboration service (starting
-     * with ws:// or wss:// and without the trailing slash) and client identity
-     * which will be used for authentication.
+     * Creates Client instance given WebSocket client connected to the
+     * collaboration service and user identity, which will be used for
+     * authentication.
      */
-    function Client(url, identity) {
+    function Client(socket, identity) {
         var _this = this;
         /**
          * Socket open listener. Authenticates the collaboration client and updates
          * internal client data.
          */
         this.handleOpen = function () {
-            var socket = _this.socket;
             var message = {
                 type: 'AUTHENTICATE',
                 data: { clientIdentity: _this.identity },
             };
             log_1.default.debug('> AUTHENTICATE');
-            return sendRequest_1.default(socket, message, {})
+            return sendRequest_1.default(_this.socket, message, {})
                 .then(function (_a) {
                 var id = _a.id;
-                if (socket === _this.socket) {
-                    _this.id = id;
-                    _this.isReady = true;
-                    _this.socket.onmessage = _this.handleMessage;
-                    _this.emitter.dispatchEvent(new CustomEvent('id'));
-                    _this.sendQueuedRequests();
-                }
+                _this.id = id;
+                _this.isReady = true;
+                _this.socket.onmessage = _this.handleMessage;
+                _this.emitter.dispatchEvent(new CustomEvent('id'));
+                _this.sendQueuedRequests();
             })
                 .catch(function (err) {
                 log_1.default.error('Could not start collaboration client.', err);
@@ -80,7 +77,7 @@ var Client = /** @class */ (function () {
                 return;
             }
             try {
-                var response = sundae_collab_shared_1.responsePacketValidator.validateSync(json);
+                var response = sundae_collab_shared_1.responsePacketValidator.validateSync(json, { strict: true });
                 _this.handleResponse(response);
                 return;
             }
@@ -89,7 +86,7 @@ var Client = /** @class */ (function () {
             }
             var requestPacket;
             try {
-                requestPacket = sundae_collab_shared_1.requestPacketValidator.validateSync(json);
+                requestPacket = sundae_collab_shared_1.requestPacketValidator.validateSync(json, { strict: true });
             }
             catch (e) {
                 log_1.default.warn('Malformed packet.', { json: json, e: e });
@@ -114,7 +111,7 @@ var Client = /** @class */ (function () {
         this.requestSubscriptions = [];
         this.requestQueue = [];
         // initialize the socket
-        this.socket = new WebSocket(url + '/');
+        this.socket = socket;
         this.socket.onopen = this.handleOpen;
         this.socket.onclose = this.handleClose;
     }
@@ -159,7 +156,7 @@ var Client = /** @class */ (function () {
      * Flushes the request queue.
      */
     Client.prototype.sendQueuedRequests = function () {
-        while (this.isReady && this.socket && this.requestQueue.length > 0) {
+        while (this.isReady && this.requestQueue.length > 0) {
             var requestQueue = this.requestQueue; // used only for type reading
             var _a = this.requestQueue.shift(), message = _a.message, res = _a.res, rej = _a.rej;
             var uid = nanoid_1.nanoid();

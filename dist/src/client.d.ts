@@ -48,11 +48,11 @@ export default class Client {
      */
     private requestSubscriptions;
     /**
-     * Creates Client instance given url of the collaboration service (starting
-     * with ws:// or wss:// and without the trailing slash) and client identity
-     * which will be used for authentication.
+     * Creates Client instance given WebSocket client connected to the
+     * collaboration service and user identity, which will be used for
+     * authentication.
      */
-    constructor(url: string, identity: any);
+    constructor(socket: WebSocket, identity: any);
     /**
      * Sends a request to the server. The returned promise resolves with server
      * response.
